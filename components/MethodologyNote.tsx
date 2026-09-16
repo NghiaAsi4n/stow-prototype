@@ -1,13 +1,14 @@
 import React from "react";
+import { Translations } from "@/lib/i18n";
 
-/**
- * MethodologyNote – explains the transparent calculation approach
- * and why we chose it over the opaque 70% multiplier pattern.
- */
-export default function MethodologyNote() {
+interface MethodologyNoteProps {
+  t: Translations;
+}
+
+export default function MethodologyNote({ t }: MethodologyNoteProps) {
   return (
     <aside
-      aria-label="How this calculator works"
+      aria-label={t.methodologyAriaLabel}
       className="rounded-xl border border-blue-100 bg-blue-50 p-5 text-sm text-blue-900"
     >
       <div className="flex gap-3">
@@ -28,30 +29,21 @@ export default function MethodologyNote() {
           <path d="M12 16v-4M12 8h.01" />
         </svg>
         <div>
-          <p className="font-semibold text-blue-800">How this estimate is calculated</p>
+          <p className="font-semibold text-blue-800">{t.methodologyHeading}</p>
           <ol className="mt-2 list-decimal pl-4 space-y-1 text-blue-800 leading-relaxed">
             <li>
-              <strong>Physical volume</strong> — we multiply Length × Width × Height × Quantity
-              for each item, then sum them all.
+              <strong>{t.methodologyStep1Title}</strong> — {t.methodologyStep1Body}
             </li>
             <li>
-              <strong>Packing allowance</strong> — we add a flat&nbsp;
-              <strong>+1 m³</strong> for packing gaps, aisle access, and loading room. This
-              allowance is displayed separately so you can see exactly what was added.
+              <strong>{t.methodologyStep2Title}</strong> — {t.methodologyStep2Body}
             </li>
             <li>
-              <strong>Recommended size</strong> — we round up to the next prototype example size
-              that fits your total.
+              <strong>{t.methodologyStep3Title}</strong> — {t.methodologyStep3Body}
             </li>
           </ol>
-          <p className="mt-3 text-xs text-blue-700">
-            This approach follows MyStorage&apos;s public guidance of allowing approximately 1 CBM
-            above estimated volume, rather than applying an unexplained fixed percentage
-            multiplier per item.
-          </p>
+          <p className="mt-3 text-xs text-blue-700">{t.methodologyFootnote}</p>
         </div>
       </div>
     </aside>
   );
 }
-

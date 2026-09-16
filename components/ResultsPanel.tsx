@@ -2,16 +2,18 @@
 
 import React from "react";
 import { CalculationResult, PACKING_ALLOWANCE_M3, PROTOTYPE_SIZE_TIERS } from "@/lib/calculator";
+import { Translations } from "@/lib/i18n";
 
 interface ResultsPanelProps {
   result: CalculationResult;
+  t: Translations;
 }
 
 function fmt(n: number, decimals = 2) {
   return n.toFixed(decimals);
 }
 
-export default function ResultsPanel({ result }: ResultsPanelProps) {
+export default function ResultsPanel({ result, t }: ResultsPanelProps) {
   const { totalPhysicalVolume, packingAllowance, estimatedRequired, recommendedTier, itemVolumes } =
     result;
 
@@ -21,10 +23,10 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
     <section aria-labelledby="results-heading" className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
         <h2 id="results-heading" className="text-lg font-bold text-slate-800">
-          Storage Estimate
+          {t.storageEstimate}
         </h2>
         <p className="mt-0.5 text-sm text-slate-500">
-          Calculated transparently — every number explained below.
+          {t.estimateSubtitle}
         </p>
       </div>
 
@@ -32,7 +34,7 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
       {itemVolumes.length > 0 && (
         <div className="px-6 pt-4 pb-2">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Volume per item
+            {t.volumePerItem}
           </p>
           <ul className="space-y-1">
             {itemVolumes.map((iv) => (
@@ -55,10 +57,8 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
         {/* Physical volume */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-700">Physical item volume</p>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Sum of L × W × H × qty for each item
-            </p>
+            <p className="text-sm font-semibold text-slate-700">{t.physicalItemVolume}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{t.physicalItemVolumeDesc}</p>
           </div>
           <span className="font-mono text-xl font-bold text-slate-800 whitespace-nowrap">
             {hasItems ? `${fmt(totalPhysicalVolume)} m³` : "—"}
@@ -68,10 +68,9 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
         {/* Packing allowance */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-700">Packing / access allowance</p>
+            <p className="text-sm font-semibold text-slate-700">{t.packingAllowance}</p>
             <p className="mt-0.5 text-xs text-slate-500">
-              A flat +{PACKING_ALLOWANCE_M3} m³ added for packing gaps and aisle access — shown
-              separately so you see exactly what was added and why.
+              {t.packingAllowanceDesc(PACKING_ALLOWANCE_M3)}
             </p>
           </div>
           <span className="font-mono text-xl font-bold text-amber-600 whitespace-nowrap">
@@ -89,10 +88,8 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
         {/* Estimated required */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-700">Estimated required capacity</p>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Physical volume + allowance
-            </p>
+            <p className="text-sm font-semibold text-slate-700">{t.estimatedRequired}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{t.estimatedRequiredDesc}</p>
           </div>
           <span className="font-mono text-xl font-bold text-blue-700 whitespace-nowrap">
             {hasItems ? `${fmt(estimatedRequired)} m³` : "—"}
@@ -102,7 +99,7 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
         {/* Recommended tier */}
         <div className="rounded-xl bg-blue-600 px-5 py-4 text-white">
           <p className="text-xs font-semibold uppercase tracking-wider text-blue-200">
-            Recommended storage size
+            {t.recommendedSize}
           </p>
           <p className="mt-1 font-mono text-4xl font-extrabold">
             {!hasItems
@@ -114,8 +111,11 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
           {hasItems && (
             <p className="mt-2 text-sm text-blue-100 leading-relaxed">
               {recommendedTier !== null
-                ? `Your estimated need is ${fmt(estimatedRequired)} m³. The next available prototype size is ${recommendedTier} m³, so that is what we recommend.`
-                : `Your estimated need (${fmt(estimatedRequired)} m³) exceeds the largest prototype example size. Contact MyStorage directly for a custom quote.`}
+                ? t.recommendedExplain(fmt(estimatedRequired), recommendedTier)
+                : t.recommendedExceedsMax(
+                    fmt(estimatedRequired),
+                    PROTOTYPE_SIZE_TIERS[PROTOTYPE_SIZE_TIERS.length - 1]
+                  )}
             </p>
           )}
         </div>
@@ -124,10 +124,7 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
       {/* Prototype disclaimer */}
       <div className="border-t border-slate-100 bg-amber-50 px-6 py-3">
         <p className="text-xs text-amber-800">
-          <strong>Prototype note:</strong> The size tiers above (
-          {PROTOTYPE_SIZE_TIERS.join(", ")} m³) are example values covering the 1–23 m³ range
-          stated on MyStorage's website. They are <strong>not</strong> official MyStorage
-          inventory tiers. Contact{" "}
+          <strong>{t.prototypeNote(PROTOTYPE_SIZE_TIERS.join(", "))}</strong>{" "}
           <a
             href="https://mystorage.vn"
             target="_blank"
@@ -136,10 +133,9 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
           >
             mystorage.vn
           </a>{" "}
-          for actual availability.
+          {t.prototypeNoteForActual}
         </p>
       </div>
     </section>
   );
 }
-

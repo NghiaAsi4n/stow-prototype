@@ -3,25 +3,27 @@
 import React from "react";
 import { StorageItem, ValidationErrors } from "@/types/item";
 import { itemPhysicalVolume, parseDimension, parseQuantity } from "@/lib/calculator";
+import { Translations } from "@/lib/i18n";
 
 interface ItemRowProps {
   item: StorageItem;
+  t: Translations;
   onChange: (updated: StorageItem) => void;
   onRemove: (id: string) => void;
 }
 
-function validate(item: StorageItem): ValidationErrors {
+function validate(item: StorageItem, t: Translations): ValidationErrors {
   const errors: ValidationErrors = {};
-  if (!item.name.trim()) errors.name = "Item name is required.";
-  if (isNaN(parseDimension(item.length))) errors.length = "Must be a positive number (m).";
-  if (isNaN(parseDimension(item.width))) errors.width = "Must be a positive number (m).";
-  if (isNaN(parseDimension(item.height))) errors.height = "Must be a positive number (m).";
-  if (isNaN(parseQuantity(item.quantity))) errors.quantity = "Must be a positive whole number.";
+  if (!item.name.trim()) errors.name = t.errNameRequired;
+  if (isNaN(parseDimension(item.length))) errors.length = t.errDimensionPositive;
+  if (isNaN(parseDimension(item.width))) errors.width = t.errDimensionPositive;
+  if (isNaN(parseDimension(item.height))) errors.height = t.errDimensionPositive;
+  if (isNaN(parseQuantity(item.quantity))) errors.quantity = t.errQuantityPositive;
   return errors;
 }
 
-export default function ItemRow({ item, onChange, onRemove }: ItemRowProps) {
-  const errors = validate(item);
+export default function ItemRow({ item, t, onChange, onRemove }: ItemRowProps) {
+  const errors = validate(item, t);
   const hasErrors = Object.keys(errors).length > 0;
   const volume = itemPhysicalVolume(item);
 
@@ -29,11 +31,13 @@ export default function ItemRow({ item, onChange, onRemove }: ItemRowProps) {
     onChange({ ...item, [field]: value });
   }
 
+  const displayName = item.name || t.unnamed;
+
   return (
     <div
       className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
       role="group"
-      aria-label={`Storage item: ${item.name || "Unnamed"}`}
+      aria-label={t.storageItemGroup(displayName)}
     >
       {/* Row header: name + volume badge + remove button */}
       <div className="mb-3 flex items-start gap-3">
@@ -42,14 +46,14 @@ export default function ItemRow({ item, onChange, onRemove }: ItemRowProps) {
             htmlFor={`name-${item.id}`}
             className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
           >
-            Item name
+            {t.itemName}
           </label>
           <input
             id={`name-${item.id}`}
             type="text"
             value={item.name}
             onChange={(e) => handleField("name", e.target.value)}
-            placeholder="e.g. Wardrobe"
+            placeholder={t.itemNamePlaceholder}
             className={`w-full rounded-lg border px-3 py-2 text-sm text-slate-800 outline-none transition focus:ring-2 focus:ring-blue-500 ${
               errors.name ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
             }`}
@@ -70,7 +74,7 @@ export default function ItemRow({ item, onChange, onRemove }: ItemRowProps) {
                 ? "bg-slate-100 text-slate-400"
                 : "bg-blue-50 text-blue-700"
             }`}
-            aria-label={`Volume for this item: ${volume.toFixed(3)} m³`}
+            aria-label={t.volumeAriaLabel(volume.toFixed(3))}
           >
             {hasErrors || volume === 0 ? "—" : `${volume.toFixed(3)} m³`}
           </span>
@@ -81,9 +85,8 @@ export default function ItemRow({ item, onChange, onRemove }: ItemRowProps) {
           type="button"
           onClick={() => onRemove(item.id)}
           className="mt-5 shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-          aria-label={`Remove item: ${item.name || "Unnamed"}`}
+          aria-label={t.removeAriaLabel(displayName)}
         >
-          {/* × icon */}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
@@ -94,18 +97,18 @@ export default function ItemRow({ item, onChange, onRemove }: ItemRowProps) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {(
           [
-            { field: "length", label: "Length (m)", errKey: "length" },
-            { field: "width", label: "Width (m)", errKey: "width" },
-            { field: "height", label: "Height (m)", errKey: "height" },
-            { field: "quantity", label: "Quantity", errKey: "quantity" },
+            { field: "length", labelKey: "labelLength", errKey: "length" },
+            { field: "width",  labelKey: "labelWidth",  errKey: "width"  },
+            { field: "height", labelKey: "labelHeight", errKey: "height" },
+            { field: "quantity", labelKey: "labelQuantity", errKey: "quantity" },
           ] as const
-        ).map(({ field, label, errKey }) => (
+        ).map(({ field, labelKey, errKey }) => (
           <div key={field}>
             <label
               htmlFor={`${field}-${item.id}`}
               className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
             >
-              {label}
+              {t[labelKey]}
             </label>
             <input
               id={`${field}-${item.id}`}
@@ -128,8 +131,6 @@ export default function ItemRow({ item, onChange, onRemove }: ItemRowProps) {
           </div>
         ))}
       </div>
-
     </div>
   );
 }
-

@@ -3,13 +3,13 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { StorageItem } from "@/types/item";
 import { calculateStorage } from "@/lib/calculator";
+import { Lang, getT } from "@/lib/i18n";
 import ItemRow from "@/components/ItemRow";
 import ResultsPanel from "@/components/ResultsPanel";
 import MethodologyNote from "@/components/MethodologyNote";
 
 // ---------------------------------------------------------------------------
-// Pre-loaded example items matching the guide.md scenario so the page is
-// immediately usable without any user input.
+// Pre-loaded example items matching the guide.md audit scenario.
 // ---------------------------------------------------------------------------
 const EXAMPLE_ITEMS: StorageItem[] = [
   { id: "1", name: "Wardrobe", length: "2", width: "0.6", height: "2", quantity: "1" },
@@ -25,7 +25,15 @@ function generateId() {
 }
 
 export default function HomePage() {
+  const [lang, setLang] = useState<Lang>("en");
   const [items, setItems] = useState<StorageItem[]>(EXAMPLE_ITEMS);
+
+  // Derive the translation object whenever language changes
+  const t = useMemo(() => getT(lang), [lang]);
+
+  const toggleLang = useCallback(() => {
+    setLang((prev) => (prev === "en" ? "vi" : "en"));
+  }, []);
 
   const handleChange = useCallback((updated: StorageItem) => {
     setItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
@@ -54,7 +62,7 @@ export default function HomePage() {
       {/* ---- Header ---- */}
       <header className="border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             {/* Storage icon */}
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -62,20 +70,30 @@ export default function HomePage() {
                 <path d="m3.3 7 8.7 5 8.7-5M12 22V12" />
               </svg>
             </div>
-            <div>
+
+            {/* Title + subtitle */}
+            <div className="flex-1">
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                Storage Size Calculator
+                {t.siteTitle}
               </h1>
-              <p className="mt-0.5 text-sm text-slate-500">
-                Add your items below — we&apos;ll estimate the storage capacity you need,
-                showing every calculation step transparently.
-              </p>
+              <p className="mt-0.5 text-sm text-slate-500">{t.siteSubtitle}</p>
             </div>
+
+            {/* EN / VI language toggle */}
+            <button
+              type="button"
+              onClick={toggleLang}
+              aria-label={t.langToggleLabel}
+              className="mt-0.5 shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition hover:border-blue-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {lang === "en" ? "VI" : "EN"}
+            </button>
           </div>
+
           {/* Prototype badge */}
           <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
             <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />
-            Prototype — not an official MyStorage calculator
+            {t.prototypeBadge}
           </div>
         </div>
       </header>
@@ -87,7 +105,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-slate-700">
-                Your items{" "}
+                {t.yourItems}{" "}
                 <span className="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600">
                   {items.length}
                 </span>
@@ -100,14 +118,14 @@ export default function HomePage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
-                Add item
+                {t.addItem}
               </button>
             </div>
 
             {/* Item rows */}
             {items.length === 0 ? (
               <div className="rounded-xl border-2 border-dashed border-slate-300 py-14 text-center">
-                <p className="text-slate-400 text-sm">No items yet. Click &ldquo;Add item&rdquo; to get started.</p>
+                <p className="text-slate-400 text-sm">{t.noItems}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -115,6 +133,7 @@ export default function HomePage() {
                   <ItemRow
                     key={item.id}
                     item={item}
+                    t={t}
                     onChange={handleChange}
                     onRemove={handleRemove}
                   />
@@ -129,29 +148,26 @@ export default function HomePage() {
                 onClick={handleAdd}
                 className="w-full rounded-xl border-2 border-dashed border-slate-300 py-3 text-sm font-semibold text-slate-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                + Add another item
+                {t.addAnotherItem}
               </button>
             )}
 
             {/* Methodology note */}
-            <MethodologyNote />
+            <MethodologyNote t={t} />
           </div>
 
           {/* Right column: results (sticky on desktop) */}
           <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
-            <ResultsPanel result={result} />
+            <ResultsPanel result={result} t={t} />
           </div>
         </div>
       </main>
 
       {/* ---- Footer ---- */}
       <footer className="mt-12 border-t border-slate-200 bg-white px-4 py-6 text-center text-xs text-slate-400">
-        <p>
-          This is a <strong>prototype</strong> built as part of a MyStorage Product Engineering
-          Intern (AI-Native) assignment. It is not affiliated with or endorsed by MyStorage.
-        </p>
+        <p>{t.footerPrototype}</p>
         <p className="mt-1">
-          Official site:{" "}
+          {t.footerOfficialSite}{" "}
           <a
             href="https://mystorage.vn"
             target="_blank"
@@ -165,4 +181,3 @@ export default function HomePage() {
     </div>
   );
 }
-
